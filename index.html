@@ -3,26 +3,721 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Scribble Clone</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Scribble Game Deluxe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #FFC107;
+            --accent-color: #2196F3;
+            --bg-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --border-color: #ddd;
+            --shadow-color: rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            background-color: var(--card-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        #lobby, #game {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px var(--accent-color);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Game Layout */
+        #gameHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9em;
+        }
+
+        #wordToDraw, #timer {
+            margin: 0;
+        }
+
+        #wordToDraw span {
+            background-color: rgba(0,0,0,0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        #gameContent {
+            display: flex;
+            flex-grow: 1;
+        }
+
+        #drawingArea {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #e0e0e0;
+        }
+
+        #canvas {
+            border: 2px solid var(--border-color);
+            background-color: white;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            cursor: crosshair;
+        }
+
+        #drawingTools {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            box-shadow: 0 -2px 10px var(--shadow-color);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tool-button, .color-box, #brushSizeSlider {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tool-button i {
+            font-size: 1.2em;
+            color: var(--text-color);
+        }
+
+        .tool-button.active, .color-box.active {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px var(--accent-color);
+        }
+
+        .tool-button:hover, .color-box:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        .color-box {
+            background-color: #000; /* Will be overridden by inline style */
+        }
+
+        #brushSizeSlider {
+            width: 100px;
+            height: 40px;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border: none;
+            margin: 0 5px;
+        }
+
+        #brushSizeSlider:hover {
+            opacity: 1;
+        }
+
+        #brushSizeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        #brushSizeSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        #sidebar {
+            width: 300px;
+            background-color: var(--card-bg-color);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chatBox {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border-color);
+            max-height: 50%; /* Adjust as needed */
+        }
+
+        .chat-message {
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+        .chat-message.system { color: var(--accent-color); font-style: italic; }
+        .chat-message.correct { color: green; font-weight: bold; }
+        .chat-message.drawer { color: purple; font-weight: bold; }
+        .chat-message.guess { color: #555; }
+        .chat-message strong { color: var(--text-color); }
+
+        #chatInputContainer {
+            display: flex;
+            padding: 10px 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #chatInput {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #chatSendBtn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        #playersListContainer {
+            padding: 15px;
+            max-height: 50%; /* Adjust as needed */
+            overflow-y: auto;
+        }
+
+        #playersList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #playersList li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #playersList li:last-child {
+            border-bottom: none;
+        }
+
+        .player-score {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .player-name.drawer {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        #leaveRoomBtn {
+            background-color: #f44336;
+            margin-top: 15px;
+            align-self: flex-end; /* To align it to the right within the sidebar */
+            padding: 10px 20px;
+            font-size: 0.9em;
+            margin-right: 15px;
+            margin-bottom: 15px;
+        }
+
+        #leaveRoomBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        #wordSelectionOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .word-choice {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .word-choice:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        
+        /* Font Awesome Icons */
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css");
+    </style>
 </head>
 <body>
-    <div id="lobby">
-        <input type="text" id="username" placeholder="Your Name" />
-        <input type="text" id="roomId" placeholder="Room ID" />
-        <button id="joinBtn">Join Room</button>
-    </div>
 
-    <div id="game" style="display:none;">
-        <canvas id="canvas" width="800" height="600"></canvas>
-        <input type="text" id="guessInput" placeholder="Enter your guess..." />
-        <button id="guessBtn">Guess</button>
-        <div id="messages"></div>
-        <h3>Players:</h3>
-        <ul id="playersList"></ul>
+    <div id="gameContainer">
+        <div id="lobby">
+            <h1>Scribble Deluxe</h1>
+            <div class="input-group">
+                <label for="username">Your Name:</label>
+                <input type="text" id="username" placeholder="Enter your name" maxlength="15" />
+            </div>
+            <div class="input-group">
+                <label for="roomId">Room ID:</label>
+                <input type="text" id="roomId" placeholder="Enter room ID or leave blank to create" maxlength="10" />
+            </div>
+            <button id="joinBtn">Join Room</button>
+        </div>
+
+        <div id="game" style="display:none;">
+            <div id="gameHeader">
+                <p id="roomInfo">Room: <span id="currentRoomId"></span></p>
+                <p id="wordToDraw">Draw: <span id="displayWord">_ _ _ _ _</span></p>
+                <p>Time Left: <span id="timer">60</span>s</p>
+            </div>
+            <div id="gameContent">
+                <div id="drawingArea">
+                    <canvas id="canvas" width="800" height="600"></canvas>
+                    <div id="wordSelectionOverlay" style="display:none;">
+                        <h2>Choose a word to draw!</h2>
+                        <div id="wordChoices">
+                            <!-- Word choices will be inserted here by JS -->
+                        </div>
+                    </div>
+                    <div id="drawingTools">
+                        <button class="tool-button active" id="pencilTool" title="Pencil"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="tool-button" id="eraserTool" title="Eraser"><i class="fas fa-eraser"></i></button>
+                        <input type="range" id="brushSizeSlider" min="1" max="20" value="2" title="Brush Size">
+                        <input type="color" id="colorPicker" value="#000000" title="Color Picker">
+                        <button class="tool-button" id="clearCanvasBtn" title="Clear Canvas"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+                <div id="sidebar">
+                    <div id="chatBox">
+                        <!-- Chat messages go here -->
+                        <div class="chat-message system">Welcome to the game!</div>
+                    </div>
+                    <div id="chatInputContainer">
+                        <input type="text" id="chatInput" placeholder="Type your guess or message..." />
+                        <button id="chatSendBtn">Send</button>
+                    </div>
+                    <div id="playersListContainer">
+                        <h3>Players:</h3>
+                        <ul id="playersList"></ul>
+                    </div>
+                    <button id="leaveRoomBtn">Leave Room</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // --- Socket.IO Connection ---
+        const socket = io();
+
+        // --- DOM Elements ---
+        const lobbyDiv = document.getElementById('lobby');
+        const gameDiv = document.getElementById('game');
+        const usernameInput = document.getElementById('username');
+        const roomIdInput = document.getElementById('roomId');
+        const joinBtn = document.getElementById('joinBtn');
+        const currentRoomIdSpan = document.getElementById('currentRoomId');
+        const displayWordSpan = document.getElementById('displayWord');
+        const timerSpan = document.getElementById('timer');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const pencilToolBtn = document.getElementById('pencilTool');
+        const eraserToolBtn = document.getElementById('eraserTool');
+        const brushSizeSlider = document.getElementById('brushSizeSlider');
+        const colorPicker = document.getElementById('colorPicker');
+        const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+        const drawingToolsDiv = document.getElementById('drawingTools');
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+        const playersList = document.getElementById('playersList');
+        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+        const wordSelectionOverlay = document.getElementById('wordSelectionOverlay');
+        const wordChoicesDiv = document.getElementById('wordChoices');
+
+        // --- Game State Variables ---
+        let isDrawer = false;
+        let drawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let roomId = '';
+        let currentBrushColor = '#000000';
+        let currentBrushSize = 2;
+        let currentTool = 'pencil'; // 'pencil' or 'eraser'
+
+        // --- Canvas Setup ---
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // --- Helper Functions ---
+        function addChatMessage(username, message, type = 'guess') {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('chat-message');
+            msgDiv.classList.add(type);
+
+            if (username) {
+                msgDiv.innerHTML = `<strong>${username}:</strong> ${message}`;
+            } else {
+                msgDiv.textContent = message; // System message
+            }
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
+        }
+
+        function updateBrush() {
+            ctx.lineWidth = currentBrushSize;
+            ctx.strokeStyle = currentTool === 'pencil' ? currentBrushColor : '#FFFFFF'; // Eraser draws white
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Re-draw a white background for the eraser to work correctly
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // --- Event Listeners ---
+        joinBtn.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            roomId = roomIdInput.value.trim();
+            if (!username) {
+                alert('Please enter a username!');
+                return;
+            }
+            if (!roomId) {
+                roomId = 'room_' + Math.random().toString(36).substring(2, 9); // Generate a random room ID if empty
+                roomIdInput.value = roomId; // Show generated ID to user
+            }
+
+            socket.emit('joinRoom', { username, roomId });
+            lobbyDiv.style.display = 'none';
+            gameDiv.style.display = 'flex'; // Use flex for game layout
+            currentRoomIdSpan.textContent = roomId;
+            addChatMessage(null, `Welcome, ${username}! Joining room ${roomId}.`, 'system');
+            updateBrush(); // Initialize brush settings
+            clearCanvas(); // Clear canvas on join
+        });
+
+        leaveRoomBtn.addEventListener('click', () => {
+            socket.emit('leaveRoom', roomId);
+            lobbyDiv.style.display = 'flex';
+            gameDiv.style.display = 'none';
+            chatBox.innerHTML = '<div class="chat-message system">You have left the room.</div>';
+            playersList.innerHTML = '';
+            displayWordSpan.textContent = '_ _ _ _ _';
+            timerSpan.textContent = '0';
+            wordSelectionOverlay.style.display = 'none';
+            isDrawer = false;
+            drawingToolsDiv.style.pointerEvents = 'none'; // Disable tools
+            drawingToolsDiv.style.opacity = '0.5';
+            clearCanvas();
+        });
+
+        // Drawing functionality
+        canvas.addEventListener('mousedown', (e) => {
+            if (!isDrawer || currentTool === 'spectator') return; // Only drawer can draw
+            drawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            socket.emit('drawing', { roomId, x: lastX, y: lastY, color: currentBrushColor, size: currentBrushSize, tool: currentTool, newPath: true });
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing || !isDrawer || currentTool === 'spectator') return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            updateBrush(); // Apply current brush settings
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            // ctx.beginPath(); // No need to begin a new path until mouseup
+            // ctx.moveTo(x, y);
+
+            socket.emit('drawing', { roomId, x, y, color: currentBrushColor, size: currentBrushSize, tool: currentTool, newPath: false });
+            lastX = x;
+            lastY = y;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.beginPath(); // Start a new path for the next drawing action
+        });
+
+        canvas.addEventListener('mouseout', () => { // Stop drawing if mouse leaves canvas
+            drawing = false;
+            ctx.beginPath();
+        });
+
+
+        // Drawing tools
+        pencilToolBtn.addEventListener('click', () => {
+            currentTool = 'pencil';
+            pencilToolBtn.classList.add('active');
+            eraserToolBtn.classList.remove('active');
+            updateBrush();
+        });
+
+        eraserToolBtn.addEventListener('click', () => {
+            currentTool = 'eraser';
+            eraserToolBtn.classList.add('active');
+            pencilToolBtn.classList.remove('active');
+            updateBrush();
+        });
+
+        brushSizeSlider.addEventListener('input', (e) => {
+            currentBrushSize = parseInt(e.target.value);
+            updateBrush();
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            currentBrushColor = e.target.value;
+            updateBrush();
+        });
+
+        clearCanvasBtn.addEventListener('click', () => {
+            if (isDrawer) {
+                clearCanvas();
+                socket.emit('clearCanvas', roomId);
+            }
+        });
+
+        // Chat/Guess input
+        chatSendBtn.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                socket.emit('chatMessage', { roomId, message, username: usernameInput.value });
+                chatInput.value = '';
+            }
+        });
+
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                chatSendBtn.click();
+            }
+        });
+
+        // --- Socket Event Handlers ---
+        socket.on('updatePlayers', (players) => {
+            playersList.innerHTML = '';
+            players.forEach(p => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="player-name ${p.isDrawer ? 'drawer' : ''}">${p.username} ${p.isDrawer ? '(Drawing)' : ''}</span> <span class="player-score">${p.score}</span>`;
+                playersList.appendChild(li);
+            });
+        });
+
+        socket.on('drawing', (data) => {
+            if (isDrawer) return; // Drawer doesn't need to receive their own drawings
+            
+            const { x, y, color, size, tool, newPath } = data;
+            ctx.lineWidth = size;
+            ctx.strokeStyle = tool === 'pencil' ? color : '#FFFFFF'; // Mimic eraser locally
+            
+            if (newPath) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                lastX = x;
+                lastY = y;
+            } else {
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                // We need to move to the new point without beginning a new path for smooth drawing
+                ctx.beginPath();
+                ctx.moveTo(x,y);
+            }
+        });
+
+        socket.on('clearCanvas', () => {
+            if (!isDrawer) { // Only non-drawers need to clear based on socket event
+                clearCanvas();
+            }
+        });
+
+        socket.on('chatMessage', ({ username, message }) => {
+            addChatMessage(username, message, 'chat');
+        });
+
+        socket.on('newGuess', ({ username, guess }) => {
+            addChatMessage(username, guess, 'guess');
+        });
+
+        socket.on('correctGuess', ({ username, word, score }) => {
+            addChatMessage(null, `${username} guessed correctly! The word was: ${word}.`, 'correct');
+            // This is where you might update the scores if not done via updatePlayers
+            // and clear the canvas for a new round
+            clearCanvas();
+        });
+
+        socket.on('roundStart', ({ drawerId, wordHint, timer }) => {
+            isDrawer = (socket.id === drawerId);
+            displayWordSpan.textContent = wordHint;
+            timerSpan.textContent = timer;
+
+            if (isDrawer) {
+                addChatMessage(null, 'It\'s your turn to draw! Choose a word.', 'system');
+                drawingToolsDiv.style.pointerEvents = 'auto'; // Enable tools
+                drawingToolsDiv.style.opacity = '1';
+                clearCanvas(); // Clear canvas for new drawing
+            } else {
+                addChatMessage(null, 'A new round has started! Guess the word.', 'system');
+                drawingToolsDiv.style.pointerEvents = 'none'; // Disable tools
+                drawingToolsDiv.style.opacity = '0.5';
+                wordSelectionOverlay.style.display = 'none'; // Hide word selection if visible
+                clearCanvas(); // Clear canvas for guessing
+            }
+        });
+
+        socket.on('yourTurnToChooseWord', (words) => {
+            wordSelectionOverlay.style.display = 'flex';
+            wordChoicesDiv.innerHTML = '';
+            words.forEach(word => {
+                const choiceBtn = document.createElement('button');
+                choiceBtn.classList.add('word-choice');
+                choiceBtn.textContent = word;
+                choiceBtn.addEventListener('click', () => {
+                    socket.emit('wordChosen', { roomId, word });
+                    wordSelectionOverlay.style.display = 'none';
+                });
+                wordChoicesDiv.appendChild(choiceBtn);
+            });
+        });
+
+        socket.on('timerUpdate', (timeLeft) => {
+            timerSpan.textContent = timeLeft;
+        });
+
+        socket.on('roundEnd', ({ message }) => {
+            addChatMessage(null, message, 'system');
+            displayWordSpan.textContent = '_ _ _ _ _'; // Reset word display
+            timerSpan.textContent = '0';
+            isDrawer = false; // Reset drawer status
+            drawingToolsDiv.style.pointerEvents = 'none'; // Disable tools
+            drawingToolsDiv.style.opacity = '0.5';
+            wordSelectionOverlay.style.display = 'none';
+            clearCanvas();
+        });
+
+        socket.on('playerJoined', (username) => {
+            addChatMessage(null, `${username} has joined the room.`, 'system');
+        });
+
+        socket.on('playerLeft', (username) => {
+            addChatMessage(null, `${username} has left the room.`, 'system');
+        });
+
+        socket.on('error', (message) => {
+            alert(`Error: ${message}`);
+            // Potentially redirect to lobby or handle more gracefully
+            lobbyDiv.style.display = 'flex';
+            gameDiv.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
