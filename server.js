@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -8,9 +9,14 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-let rooms = {}; // { roomId: { players: [], currentDrawerIndex: 0, word: '' } }
+let rooms = {};
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
@@ -23,10 +29,8 @@ io.on('connection', (socket) => {
         }
 
         rooms[roomId].players.push({ id: socket.id, username });
-
         io.to(roomId).emit('updatePlayers', rooms[roomId].players);
 
-        // Start first round if enough players
         if (rooms[roomId].players.length === 2) {
             startNewRound(roomId);
         }
@@ -67,7 +71,6 @@ function startNewRound(roomId) {
 
     const drawer = room.players[room.currentDrawerIndex];
     io.to(roomId).emit('newRound', { drawerId: drawer.id });
-
     io.to(drawer.id).emit('yourTurnToDraw', room.word);
 }
 
