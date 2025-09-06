@@ -29,6 +29,12 @@
             list-style: none;
             padding: 0;
         }
+
+        #currentWord {
+            font-weight: bold;
+            margin: 10px;
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
@@ -41,6 +47,7 @@
     </div>
 
     <div id="game" style="display:none;">
+        <div id="currentWord">Waiting for drawer...</div>
         <canvas id="canvas" width="800" height="600"></canvas><br/>
         <input type="text" id="guessInput" placeholder="Enter your guess..." />
         <button id="guessBtn">Guess</button>
@@ -137,6 +144,7 @@
             msg.textContent = `${username} guessed correctly! The word was: ${word}`;
             msgDiv.appendChild(msg);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('currentWord').textContent = 'Waiting for drawer...';
         });
 
         socket.on('newRound', ({ drawerId }) => {
@@ -145,13 +153,13 @@
             const msg = document.createElement('div');
             msg.textContent = isDrawer ? 'You are the drawer!' : 'Guess the word!';
             msgDiv.appendChild(msg);
-            if (!isDrawer) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
 
         socket.on('yourTurnToDraw', (word) => {
             currentWord = word;
+            isDrawer = true;
+            document.getElementById('currentWord').textContent = `Draw: ${word}`;
             alert(`You are drawing! The word is: ${word}`);
         });
     </script>
