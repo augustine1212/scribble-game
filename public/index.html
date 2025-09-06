@@ -36,6 +36,7 @@
     <div id="lobby">
         <input type="text" id="username" placeholder="Your Name" />
         <input type="text" id="roomId" placeholder="Room ID" />
+        <button id="createRoomBtn">Create New Room</button>
         <button id="joinBtn">Join Room</button>
     </div>
 
@@ -58,6 +59,12 @@
         let canvas = document.getElementById('canvas');
         let ctx = canvas.getContext('2d');
         let drawing = false;
+
+        document.getElementById('createRoomBtn').onclick = () => {
+            const newRoomId = Math.random().toString(36).substring(2, 8);
+            document.getElementById('roomId').value = newRoomId;
+            alert(`New Room Created! Room ID: ${newRoomId}`);
+        };
 
         document.getElementById('joinBtn').onclick = () => {
             const username = document.getElementById('username').value.trim();
